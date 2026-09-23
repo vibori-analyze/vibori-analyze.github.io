@@ -33,7 +33,14 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check project
-        run: nix run .#check
+        run: |
+          output="$(nix run .#check 2>&1)" || {
+            printf '%s\n' "$output"
+            summary="$(printf '%s' "$output" | tail -n 20 | tr '\n' ' ')"
+            echo "::error title=Project check failed::$summary"
+            exit 1
+          }
+          printf '%s\n' "$output"
 
       - name: Build data index
         run: nix run .#build-index
